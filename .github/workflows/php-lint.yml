@@ -1,0 +1,56 @@
+name: WordPress Quality Check
+
+on:
+  push:
+    branches: ["development"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  wpcs-lint:
+    name: PHP Lint & WPCS Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: phpcs, composer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install WordPress Coding Standards & Dependencies
+        run: |
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require "wp-coding-standards/wpcs" "phpcompatibility/php-compatibility" "phpcsstandards/phpcsutils" "phpcsstandards/phpcsextra"
+          phpcs --config-set installed_paths $(composer global config home)/vendor/wp-coding-standards/wpcs,$(composer global config home)/vendor/phpcompatibility/php-compatibility,$(composer global config home)/vendor/phpcsstandards/phpcsutils,$(composer global config home)/vendor/phpcsstandards/phpcsextra
+
+      - name: PHP Syntax Check (Lint)
+        run: find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
+      - name: Run WordPress Standards Check (Errors-Only)
+        run: phpcs --standard=WordPress --warning-severity=0 --extensions=php --ignore=vendor/*,node_modules/*,wpcs/* .
+
+  js-lint:
+    name: JS Lint Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install ESLint and WordPress Plugin
+        run: npm install eslint @wordpress/eslint-plugin --no-save
+
+      - name: Run ESLint
+        run: npx eslint "**/*.js"
+        
