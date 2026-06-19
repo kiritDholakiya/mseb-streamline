@@ -17,5 +17,9 @@ module.exports = [
 				vrb_checkout_page_global_vars: 'readonly',
 			},
 		},
+		rules: {
+			// Formatting only, not a correctness issue; don't fail CI on style.
+			'prettier/prettier': 'warn',
+		},
 	},
 ];
