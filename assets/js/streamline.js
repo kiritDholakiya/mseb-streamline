@@ -42,12 +42,13 @@ class VRBPropertyForm {
     validateAvailabilityDates() {
         const $ = jQuery;
         const arrivalField = $('#CheckIn');
-        const departureField = $('#CheckOut');
 
         if (arrivalField.datepicker('getDate') === null) {
             arrivalField.datepicker("show");
             return false;
         }
+
+        const departureField = $('#CheckOut');
         if (departureField.datepicker('getDate') === null) {
             departureField.datepicker("show");
             return false;
@@ -88,7 +89,7 @@ class VRBPropertyForm {
 
             this.setCookie('STYXKEY_search_parameter', JSON.stringify(searchParameter), 1);
 
-            const url = vrb_frontend_single_page_global_vars.checkout_page_url;
+            const url = vrb_frontend_single_page_global_vars.checkout_page_url; // eslint-disable-line camelcase -- name matches the wp_localize_script object.
             const finalURL = url + "?" + queryString;
             window.location.href = finalURL;
         } else {
@@ -98,6 +99,7 @@ class VRBPropertyForm {
 
     // Reset availability content
     resetAvailabilityContent() {
+        // eslint-disable-next-line no-console -- intentional debug logging.
         console.log("Resetting availability content...");
         // Add your reset logic here
     }
