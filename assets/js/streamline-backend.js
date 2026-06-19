@@ -18,27 +18,28 @@ class StreamlineScript {
     }
 
     StreamlinestripeAPIkey(){
-        var stripe_publishable_key = jQuery('#stripe_publishable_key').val();
+        const stripePublishableKey = jQuery('#stripe_publishable_key').val();
 
-        if(stripe_publishable_key && stripe_publishable_key != ""){
+        if(stripePublishableKey && stripePublishableKey !== ""){
         }else{
             jQuery('#stripe_publishable_key_error').remove();
             jQuery('#publishable_key').after('<label id="stripe_publishable_key_error" class="error" for="stripe_publishable_key_error">Publishable Key is required.</label>');
             return false;
         }
 
-        var postData = {
+        const postData = {
             action : 'save_streamline_api_key',
-            publishable_key:  stripe_publishable_key,
-            type : 'stripe-key'
+            publishable_key:  stripePublishableKey,
+            type : 'stripe-key',
+            security: ajax_streamline_params.ajax_nonce // eslint-disable-line camelcase -- name matches the wp_localize_script object.
         };
 
         jQuery.ajax({
             type: "POST",
             data: postData,
-            url: ajax_streamline_params.ajax_url,
+            url: ajax_streamline_params.ajax_url, // eslint-disable-line camelcase -- name matches the wp_localize_script object.
             dataType: "json",
-            success: function (response) {
+            success(response) {
                 if( response.success ){
                     jQuery('.stripe_message').text('Key saved successfully in encrypted format.');
                     setTimeout(function() {
@@ -51,6 +52,7 @@ class StreamlineScript {
         }).fail(function (data) {
             this.prop('disabled', false);
             if ( window.console && window.console.log ) {
+                // eslint-disable-next-line no-console -- intentional debug logging on AJAX failure.
                 console.log( data );
             }
         });
@@ -60,32 +62,34 @@ class StreamlineScript {
         const element = jQuery(event.currentTarget);
         const type = element.data('type');
 
-        if(type == 'stripe-key'){
+        if(type === 'stripe-key'){
             jQuery('#disconnect_to_stripe').text('disconnecting..');
         }
 
-        var postData = {
+        const postData = {
             action : 'disconnect_streamline_api_key',
-            type:type,
+            type,
+            security: ajax_streamline_params.ajax_nonce // eslint-disable-line camelcase -- name matches the wp_localize_script object.
         };
 
         jQuery.ajax({
             type: "POST",
             data: postData,
-            url: ajax_streamline_params.ajax_url,
+            url: ajax_streamline_params.ajax_url, // eslint-disable-line camelcase -- name matches the wp_localize_script object.
             dataType: "json",
-            success: function (response) {
-             
-                if(type == 'stripe-key'){
+            success(response) {
+
+                if(type === 'stripe-key'){
                     jQuery('#disconnect_to_stripe').text('Disconnect');
                 }
-               
+
                 if( response.success ){
                     location.reload();
-                } 
+                }
             }
         }).fail(function (data) {
             if ( window.console && window.console.log ) {
+                // eslint-disable-next-line no-console -- intentional debug logging on AJAX failure.
                 console.log( data );
             }
         });
@@ -94,6 +98,6 @@ class StreamlineScript {
 }
 
     // Instantiate the class when the document is ready
-jQuery(document).ready(function($) {
+jQuery(document).ready(function() {
     new StreamlineScript();
 });

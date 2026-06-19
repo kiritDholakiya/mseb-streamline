@@ -1,28 +1,30 @@
 "use strict";
-var stripe;
+let stripe;
 
 jQuery(document).ready(function($) {
   $(".proceed_to_book").prop("disabled", true);
-  var postData = {
+  const postData = {
     action: 'vrb_process_checkout_stripe_key',
-    security: vrb_checkout_page_global_vars.checkout_nonce,
+    security: vrb_checkout_page_global_vars.checkout_nonce, // eslint-disable-line camelcase -- name matches the wp_localize_script object.
   };
 
   $.ajax({
     type: "POST",
     data: postData,
-    url: vrb_frontend_global_vars.ajaxurl,
+    url: vrb_frontend_global_vars.ajaxurl, // eslint-disable-line camelcase -- name matches the wp_localize_script object.
     dataType: "json",
-    success: function(response) {
+    success(response) {
       if (response.success && response.data.key) {
         // If the key is found, initialize Stripe
         initializeStripe(response.data.key);
       } else {
+        // eslint-disable-next-line no-console -- intentional debug logging.
         console.log('Stripe key not found or invalid.');
       }
     }
   }).fail(function(data) {
     if (window.console && window.console.log) {
+      // eslint-disable-next-line no-console -- intentional debug logging.
       console.log(data);
     }
   });
@@ -32,7 +34,7 @@ function initializeStripe(publishableKey) {
   
   stripe = Stripe(publishableKey);
 
-  var elements = stripe.elements({
+  const elements = stripe.elements({
     fonts: [
       {
         cssSrc: "https://fonts.googleapis.com/css?family=Quicksand",
@@ -41,7 +43,7 @@ function initializeStripe(publishableKey) {
     locale: window.__exampleLocale,
   });
 
-  var elementStyles = {
+  const elementStyles = {
     base: {
       color: "#162843",
       fontWeight: 600,
@@ -72,39 +74,39 @@ function initializeStripe(publishableKey) {
     },
   };
   
-  var elementClasses = {
+  const elementClasses = {
     focus: "focus",
     empty: "empty",
     invalid: "invalid",
   };
-  
-  var cardNumber = elements.create("cardNumber", {
+
+  const cardNumber = elements.create("cardNumber", {
     style: elementStyles,
     classes: elementClasses,
     showIcon: true,
   });
   cardNumber.mount("#card-number");
-  
-  var cardExpiry = elements.create("cardExpiry", {
+
+  const cardExpiry = elements.create("cardExpiry", {
     style: elementStyles,
     classes: elementClasses,
   });
   cardExpiry.mount("#card-expiry");
-  
-  var cardCvc = elements.create("cardCvc", {
+
+  const cardCvc = elements.create("cardCvc", {
     style: elementStyles,
     classes: elementClasses,
   });
   cardCvc.mount("#card-cvc");
-  
+
   registerElements([cardNumber, cardExpiry, cardCvc], "property-checkout-stripe");
 
-  function registerElements(elements, divClassName) {
-    var formClass = "." + divClassName;
-    var frmClassObj = document.querySelector(formClass);
-    var form = frmClassObj.querySelector("form");
-    var error = form.querySelector(".error");
-    var errorMessage = error.querySelector(".message");
+  function registerElements(stripeElements, divClassName) {
+    const formClass = "." + divClassName;
+    const frmClassObj = document.querySelector(formClass);
+    const form = frmClassObj.querySelector("form");
+    const error = form.querySelector(".error");
+    const errorMessage = error.querySelector(".message");
   
     function enableInputs() {
       Array.prototype.forEach.call(
@@ -131,18 +133,18 @@ function initializeStripe(publishableKey) {
     function triggerBrowserValidation() {
       // The only way to trigger HTML5 form validation UI is to fake a user submit
       // event.
-      var submit = document.createElement("input");
+      const submit = document.createElement("input");
       submit.type = "submit";
       submit.style.display = "none";
       form.appendChild(submit);
       // submit.click();
       submit.remove();
     }
-  
+
     // Listen for errors from each Element, and show error messages in the UI.
-    var savedErrors = {};
+    const savedErrors = {};
   //   jQuery('.proceed_to_book').prop('disabled', true);
-    elements.forEach(function (element, idx) {
+    stripeElements.forEach(function (element, idx) {
       element.on("change", function (event) {
         if (event.error) {
           error.classList.add("visible");
@@ -154,7 +156,7 @@ function initializeStripe(publishableKey) {
           savedErrors[idx] = null;
   
           // Loop over the saved errors and find the first one, if any.
-          var nextError = Object.keys(savedErrors)
+          const nextError = Object.keys(savedErrors)
             .sort()
             .reduce(function (maybeFoundError, key) {
               return maybeFoundError || savedErrors[key];
@@ -180,13 +182,12 @@ function initializeStripe(publishableKey) {
   
       // Trigger HTML5 validation UI on the form if any of the inputs fail
       // validation.
-      var plainInputsValid = true;
+      let plainInputsValid = true;
       Array.prototype.forEach.call(
         form.querySelectorAll("input"),
         function (input) {
           if (input.checkValidity && !input.checkValidity()) {
             plainInputsValid = false;
-            return;
           }
         }
       );
@@ -203,36 +204,35 @@ function initializeStripe(publishableKey) {
       disableInputs();
   
       // Gather additional customer data we may have collected in our form.
-      var name = jQuery("#first_name").val() +' '+jQuery("#last_name").val();
-      var address1 = jQuery("#address1").val();
-      var address2 = jQuery("#address2").val();
-      var city = jQuery("#city").val();
-      var state = jQuery("#state").val();
-      var zip = jQuery("#postal_code").val();
-      var country = jQuery("#country").val();
-      var name_of_card = jQuery('#name_on_card').val();
-  
-      var additionalData = {
+      const address1 = jQuery("#address1").val();
+      const address2 = jQuery("#address2").val();
+      const city = jQuery("#city").val();
+      const state = jQuery("#state").val();
+      const zip = jQuery("#postal_code").val();
+      const country = jQuery("#country").val();
+      const nameOfCard = jQuery('#name_on_card').val();
+
+      const additionalData = {
         billing_details: {
-          name: name_of_card,
+          name: nameOfCard,
           address: {
             line1: address1,
             line2: address2,
-            city: city,
-            state: state,
+            city,
+            state,
             postal_code: zip,
-            country: country
+            country
           }
         },
       };
   
       stripe.createPaymentMethod('card', cardNumber, additionalData).then(function (result) {
         frmClassObj.classList.remove("submitting");
-        console.log("EWferf");
         if (result.paymentMethod) {
 
+          // eslint-disable-next-line no-console -- intentional debug logging.
           console.log(result.paymentMethod);
-          
+
           frmClassObj.querySelector(".stripe_token").value = result.paymentMethod.id;
           chekoutPayment();
         } else {
@@ -252,10 +252,10 @@ function initializeStripe(publishableKey) {
   "use strict";
 })();
 
-function chekoutPayment(params) {
-  var $ = jQuery;
+function chekoutPayment() {
+  const $ = jQuery;
 
-  var postData = {
+  const postData = {
     action : 'vrb_book_property',
     property_data : $('#availability_form').serialize(),
     customer_data : $('#customer_data').serialize(),
@@ -272,17 +272,17 @@ function chekoutPayment(params) {
     textPos : 'vertical',
     fontSize : '',
     source : '',
-    onClose : function() {}
+    onClose() {}
   });
 
   jQuery( ".proceed_to_book_property" ).prop( "disabled", true );
-  
+
    jQuery.ajax({
     type: "POST",
     data: postData,
-    url: vrb_frontend_global_vars.ajaxurl,
+    url: vrb_frontend_global_vars.ajaxurl, // eslint-disable-line camelcase -- name matches the wp_localize_script object.
     dataType: "json",
-    success: function (response) {
+    success(response) {
       if (response.success) {
          window.location.href = response.data.redirect;
          jQuery('.checkout-infomaton-side, .checkout-payment-side').waitMe("hide");
@@ -292,9 +292,8 @@ function chekoutPayment(params) {
         jQuery( ".proceed_to_book_property" ).prop( "disabled", false );
       }
     },
-  }).fail(function (data) {
+  }).fail(function () {
     jQuery('.checkout-infomaton-side, .checkout-payment-side').waitMe("hide");
   });
 
-  
 }
